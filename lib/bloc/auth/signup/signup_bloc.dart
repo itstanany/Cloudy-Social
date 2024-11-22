@@ -18,7 +18,6 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
         final userDao = database.userDao;
 
         final exists = await userDao.checkUsernameExists(event.username);
-        print("exist" + exists.toString());
         if (exists ?? false) {
           emit(SignupFailure('Username already exists'));
           return;
