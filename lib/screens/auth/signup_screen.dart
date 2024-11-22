@@ -1,9 +1,12 @@
 // signup_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:social_feed_app/bloc/auth/signup/signup_bloc.dart';
 import 'package:social_feed_app/bloc/auth/signup/signup_events.dart';
 import 'package:social_feed_app/bloc/auth/signup/signup_state.dart';
+import 'package:social_feed_app/config/RouteNames.dart';
+import 'package:social_feed_app/config/router.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -30,6 +33,7 @@ class _SignupScreenState extends State<SignupScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Signup successful!')),
             );
+            context.go(RouteNames.feed);
           } else if (state is SignupFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.error)),
