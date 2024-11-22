@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
+import 'package:social_feed_app/bloc/auth/signup/signup_bloc.dart';
 import 'package:social_feed_app/config/router.dart';
 
 void main() async {
@@ -12,6 +13,7 @@ void main() async {
   await Hive.openBox('auth');
 
   final authBloc = AuthBloc();
+  final signupBlock = SignupBloc();
 
   runApp(
     MultiBlocProvider(
@@ -19,6 +21,9 @@ void main() async {
         BlocProvider<AuthBloc>(
           create: (context) => authBloc,
         ),
+        BlocProvider<SignupBloc>(
+          create: (context) => signupBlock,
+        )
       ],
       child: MyApp(),
     ),
