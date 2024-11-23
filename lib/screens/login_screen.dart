@@ -23,11 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthAuthenticated) {
-            context.go('/feed');
-          }
-        },
+        listener: (context, state) {},
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
