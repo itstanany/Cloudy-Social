@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
+import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/auth/signup/signup_bloc.dart';
 import 'package:social_feed_app/config/router.dart';
-import 'package:social_feed_app/data/database/database_singleton.dart';
+import 'package:social_feed_app/services/auth_storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // todo initialize on app startup is ok or better on first access
   // Initialize Hive
-  await Hive.initFlutter();
-  await Hive.openBox('auth');
+  await AuthStorageService().initialize();
 
   final authBloc = AuthBloc();
   final signupBlock = SignupBloc();

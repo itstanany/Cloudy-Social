@@ -33,7 +33,6 @@ class _SignupScreenState extends State<SignupScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Signup successful!')),
             );
-            context.go(RouteNames.feed);
           } else if (state is SignupFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.error)),

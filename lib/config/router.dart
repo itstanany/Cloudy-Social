@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_state.dart';
+import 'package:social_feed_app/bloc/auth/signup/signup_bloc.dart';
+import 'package:social_feed_app/bloc/auth/signup/signup_state.dart';
 import 'package:social_feed_app/config/RouteNames.dart';
 import 'package:social_feed_app/config/router_refresh_stream.dart';
 import 'package:social_feed_app/screens/auth/signup_screen.dart';
@@ -15,20 +17,26 @@ class AppRouter {
   static GoRouter getRouter(BuildContext context) {
     return GoRouter(
       initialLocation: RouteNames.login,
-      refreshListenable: GoRouterRefreshStream(context.read<AuthBloc>().stream),
+      refreshListenable: GoRouterRefreshStream(
+          context.read<AuthBloc>().stream, context.read<SignupBloc>().stream),
       redirect: (BuildContext context, GoRouterState state) {
-        final isAuthenticated =
+        final isAuthenticatedFromLogin =
             context.read<AuthBloc>().state is AuthAuthenticated;
-        final currentPath = state.uri.path;
 
-        if (!isAuthenticated &&
-            currentPath != RouteNames.login &&
-            currentPath != RouteNames.signup) {
+        final isAuthenticatedFromSignup =
+            context.read<SignupBloc>().state is SignupSuccess;
+
+        final isAuthenticated =
+            isAuthenticatedFromLogin || isAuthenticatedFromSignup;
+
+        final currentPath = state.uri.path;
+        final isLoginRoute = currentPath == RouteNames.login;
+        final isSignupRoute = currentPath == RouteNames.signup;
+
+        if (!isAuthenticated && !isLoginRoute && !isSignupRoute) {
           return RouteNames.login;
         }
-        if (isAuthenticated &&
-            (currentPath == RouteNames.login ||
-                currentPath == RouteNames.signup)) {
+        if (isAuthenticated && (isLoginRoute || isSignupRoute)) {
           return RouteNames.feed;
         }
         return null;
