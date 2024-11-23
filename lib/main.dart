@@ -4,6 +4,7 @@ import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/auth/signup/signup_bloc.dart';
 import 'package:social_feed_app/config/router.dart';
+import 'package:social_feed_app/data/database/database_singleton.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
 
 void main() async {

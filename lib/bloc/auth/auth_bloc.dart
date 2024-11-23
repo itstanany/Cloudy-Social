@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/auth/auth_state.dart';
+import 'package:social_feed_app/data/database/app_database.dart';
+import 'package:social_feed_app/data/database/database_singleton.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
 import 'dart:developer' as developer;
 
@@ -40,10 +42,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-// todo: auth logic goes here
+      final _db = await DatabaseSingleton().database;
+      final isValid = await _db.userDao.validateCredentials(
+        event.username,
+        event.password,
+      );
 
-      await _authStorage.saveAuthState(event.username);
-      emit(AuthAuthenticated());
+      if (isValid ?? false) {
+        await _authStorage.saveAuthState(event.username);
+        emit(AuthAuthenticated());
+      } else {
+        emit(AuthError('Invalid credentials'));
+      }
     } catch (error) {
       emit(AuthError(error.toString()));
     }
