@@ -11,6 +11,7 @@ import 'package:social_feed_app/screens/auth/signup_screen.dart';
 import 'package:social_feed_app/screens/feed_screen.dart';
 import 'package:social_feed_app/screens/login_screen.dart';
 import 'package:social_feed_app/screens/profile_screen.dart';
+import 'package:social_feed_app/services/auth_storage_service.dart';
 
 // lib/config/router.dart
 class AppRouter {
@@ -20,14 +21,8 @@ class AppRouter {
       refreshListenable: GoRouterRefreshStream(
           context.read<AuthBloc>().stream, context.read<SignupBloc>().stream),
       redirect: (BuildContext context, GoRouterState state) {
-        final isAuthenticatedFromLogin =
-            context.read<AuthBloc>().state is AuthAuthenticated;
-
-        final isAuthenticatedFromSignup =
-            context.read<SignupBloc>().state is SignupSuccess;
-
-        final isAuthenticated =
-            isAuthenticatedFromLogin || isAuthenticatedFromSignup;
+        // todo: is there a more efficient way to access auth storage service
+        final isAuthenticated = AuthStorageService().isUserAuthenticated();
 
         final currentPath = state.uri.path;
         final isLoginRoute = currentPath == RouteNames.login;

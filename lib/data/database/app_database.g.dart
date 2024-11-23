@@ -172,6 +172,17 @@ class _$UserDao extends UserDao {
   }
 
   @override
+  Future<bool?> validateCredentials(
+    String username,
+    String password,
+  ) async {
+    return _queryAdapter.query(
+        'SELECT EXISTS(SELECT 1 FROM User WHERE username = ?1 AND password = ?2)',
+        mapper: (Map<String, Object?> row) => (row.values.first as int) != 0,
+        arguments: [username, password]);
+  }
+
+  @override
   Future<void> insertUser(User user) async {
     await _userInsertionAdapter.insert(user, OnConflictStrategy.abort);
   }

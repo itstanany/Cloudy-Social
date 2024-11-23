@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
+import 'package:social_feed_app/bloc/auth/auth_events.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -13,6 +16,9 @@ class ProfileScreen extends StatelessWidget {
             icon: const Icon(Icons.logout),
             onPressed: () {
               // Add logout logic here
+              context.read<AuthBloc>().add(
+                    SignOutRequested(),
+                  );
             },
           ),
         ],
