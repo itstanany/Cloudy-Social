@@ -98,7 +98,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `User` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `first_name` TEXT NOT NULL, `last_name` TEXT NOT NULL, `date_of_birth` TEXT NOT NULL, `posts` TEXT NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `User` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `first_name` TEXT NOT NULL, `last_name` TEXT NOT NULL, `date_of_birth` TEXT NOT NULL, `posts` TEXT NOT NULL, `profile_picture_path` TEXT)');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Post` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `body` TEXT NOT NULL, `likes` INTEGER NOT NULL, `imagePath` TEXT, `authorUsername` TEXT NOT NULL, `createdAt` TEXT NOT NULL)');
 
@@ -134,7 +134,8 @@ class _$UserDao extends UserDao {
                   'first_name': item.firstName,
                   'last_name': item.lastName,
                   'date_of_birth': item.dateOfBirth,
-                  'posts': item.posts
+                  'posts': item.posts,
+                  'profile_picture_path': item.profilePicturePath
                 }),
         _userUpdateAdapter = UpdateAdapter(
             database,
@@ -147,7 +148,8 @@ class _$UserDao extends UserDao {
                   'first_name': item.firstName,
                   'last_name': item.lastName,
                   'date_of_birth': item.dateOfBirth,
-                  'posts': item.posts
+                  'posts': item.posts,
+                  'profile_picture_path': item.profilePicturePath
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -170,7 +172,8 @@ class _$UserDao extends UserDao {
             firstName: row['first_name'] as String,
             lastName: row['last_name'] as String,
             dateOfBirth: row['date_of_birth'] as String,
-            posts: row['posts'] as String),
+            posts: row['posts'] as String,
+            profilePicturePath: row['profile_picture_path'] as String?),
         arguments: [username]);
   }
 
@@ -184,7 +187,8 @@ class _$UserDao extends UserDao {
             firstName: row['first_name'] as String,
             lastName: row['last_name'] as String,
             dateOfBirth: row['date_of_birth'] as String,
-            posts: row['posts'] as String));
+            posts: row['posts'] as String,
+            profilePicturePath: row['profile_picture_path'] as String?));
   }
 
   @override
@@ -222,7 +226,7 @@ class _$UserDao extends UserDao {
   Future<User?> getUserProfile(String username) async {
     return _queryAdapter.query(
         'SELECT first_name, last_name, date_of_birth FROM User WHERE username = ?1',
-        mapper: (Map<String, Object?> row) => User(id: row['id'] as int?, username: row['username'] as String, password: row['password'] as String, firstName: row['first_name'] as String, lastName: row['last_name'] as String, dateOfBirth: row['date_of_birth'] as String, posts: row['posts'] as String),
+        mapper: (Map<String, Object?> row) => User(id: row['id'] as int?, username: row['username'] as String, password: row['password'] as String, firstName: row['first_name'] as String, lastName: row['last_name'] as String, dateOfBirth: row['date_of_birth'] as String, posts: row['posts'] as String, profilePicturePath: row['profile_picture_path'] as String?),
         arguments: [username]);
   }
 

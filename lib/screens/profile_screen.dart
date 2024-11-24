@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/profile/profile_bloc.dart';
@@ -7,6 +11,7 @@ import 'package:social_feed_app/bloc/profile/profile_events.dart';
 import 'package:social_feed_app/bloc/profile/profile_state.dart';
 import 'package:social_feed_app/data/entity/user_entity.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
+import 'package:social_feed_app/services/image_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -19,6 +24,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _lastNameController;
   late TextEditingController _dateOfBirthController;
   DateTime? _selectedDate;
+  final _picker = ImagePicker();
+  File? _profileImage;
 
   @override
   void initState() {
@@ -73,6 +80,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: Theme.of(context).textTheme.headlineSmall,
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 24),
+                    _buildProfilePicture(state.user),
                     const SizedBox(height: 24),
                     TextFormField(
                       controller: _firstNameController,
@@ -143,6 +152,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Widget _buildProfilePicture(User user) {
+    return Center(
+      child: Stack(
+        children: [
+          CircleAvatar(
+            radius: 60,
+            backgroundImage: _getProfileImage(user.profilePicturePath),
+            child: user.profilePicturePath == null
+                ? const Icon(Icons.person, size: 60)
+                : null,
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: CircleAvatar(
+              backgroundColor: Theme.of(context).primaryColor,
+              radius: 20,
+              child: IconButton(
+                icon: const Icon(Icons.camera_alt, color: Colors.white),
+                onPressed: _updateProfilePicture,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ImageProvider? _getProfileImage(String? imagePath) {
+    if (imagePath == null) return null;
+
+    if (ImageService.isLocalImage(imagePath)) {
+      return FileImage(File(imagePath));
+    }
+    return CachedNetworkImageProvider(imagePath);
+  }
+
+  Future<void> _updateProfilePicture() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+    );
+
+    if (pickedFile != null) {
+      final imagePath = await ImageService.saveLocalImage(
+        File(pickedFile.path),
+      );
+
+      final state = context.read<ProfileBloc>().state;
+      if (state is ProfileLoaded) {
+        context.read<ProfileBloc>().add(
+              UpdateProfile(
+                User(
+                  id: state.user.id,
+                  username: state.user.username,
+                  password: state.user.password,
+                  firstName: _firstNameController.text,
+                  lastName: _lastNameController.text,
+                  dateOfBirth: _dateOfBirthController.text,
+                  posts: state.user.posts,
+                  profilePicturePath: imagePath,
+                ),
+              ),
+            );
+      }
+    }
+  }
+
   void _handleSubmit() {
     if (_formKey.currentState?.validate() ?? false) {
       final state = context.read<ProfileBloc>().state;
@@ -157,6 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   lastName: _lastNameController.text,
                   dateOfBirth: _dateOfBirthController.text,
                   posts: state.user.posts,
+                  profilePicturePath: state.user.profilePicturePath,
                 ),
               ),
             );

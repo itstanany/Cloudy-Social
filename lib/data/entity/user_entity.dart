@@ -22,6 +22,8 @@ class User {
 
   @ColumnInfo(name: "posts")
   final String posts;
+  @ColumnInfo(name: 'profile_picture_path')
+  final String? profilePicturePath;
 
   User({
     this.id,
@@ -31,5 +33,6 @@ class User {
     required this.lastName,
     required this.dateOfBirth,
     required this.posts,
+    this.profilePicturePath,
   });
 }
