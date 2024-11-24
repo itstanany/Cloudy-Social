@@ -9,6 +9,7 @@ import 'package:social_feed_app/bloc/post/post_event.dart';
 import 'package:social_feed_app/bloc/post/post_state.dart';
 import 'package:social_feed_app/config/RouteNames.dart';
 import 'package:social_feed_app/data/entity/post_entity.dart';
+import 'package:social_feed_app/services/auth_storage_service.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({Key? key}) : super(key: key);
@@ -18,10 +19,13 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
+  late String currentUsername;
+
   @override
   void initState() {
     super.initState();
     context.read<PostBloc>().add(LoadPosts());
+    currentUsername = AuthStorageService().getAuthenticatedUsername() ?? '';
   }
 
   @override
@@ -42,7 +46,10 @@ class _FeedScreenState extends State<FeedScreen> {
               itemCount: state.posts.length,
               itemBuilder: (context, index) {
                 final post = state.posts[index];
-                return PostCard(post: post);
+                return PostCard(
+                  post: post,
+                  currentUserUsername: currentUsername,
+                );
               },
             );
           }
@@ -58,76 +65,193 @@ class _FeedScreenState extends State<FeedScreen> {
 
 class PostCard extends StatelessWidget {
   final Post post;
+  final String currentUserUsername;
 
-  const PostCard({Key? key, required this.post}) : super(key: key);
+  const PostCard({
+    Key? key,
+    required this.post,
+    required this.currentUserUsername,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            // leading: CircleAvatar(
-            //   backgroundImage: CachedNetworkImageProvider(post.userAvatar),
-            // ),
-            title: Text(post.authorUsername),
-            subtitle: Text(
-              _getTimeAgo(DateTime.parse(post.createdAt)),
-            ),
-          ),
-          if (post.imagePath != null) _buildImage(post.imagePath!),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(post.body),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                LikeButton(
-                  likes: post.likes,
-                  onTap: () {
-                    // Handle like action
-                  },
+    final bool isAuthor = post.authorUsername == currentUserUsername;
+    return Dismissible(
+      key: Key(post.id.toString()),
+      direction: isAuthor ? DismissDirection.endToStart : DismissDirection.none,
+      background: Container(
+        color: Colors.red,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 16),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Delete Post'),
+              content: const Text('Are you sure you want to delete this post?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
                 ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: () {
-                    // Show post options
-                  },
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Delete'),
                 ),
               ],
+            );
+          },
+        );
+      },
+      onDismissed: (_) {
+        context.read<PostBloc>().add(DeletePost(post));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post deleted')),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              title: Text(post.authorUsername),
+              subtitle: Text(_getTimeAgo(DateTime.parse(post.createdAt))),
+              trailing: isAuthor ? _buildOptionsMenu(context) : null,
             ),
+            if (post.imagePath != null) _buildImageWidget(post.imagePath!),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(post.body),
+            ),
+            _buildActionBar(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageWidget(String imagePath) {
+    return Container(
+      constraints: const BoxConstraints(
+        maxHeight: 300,
+      ),
+      width: double.infinity,
+      child: imagePath.startsWith('http')
+          ? CachedNetworkImage(
+              imageUrl: imagePath,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              errorWidget: (context, url, error) => const Center(
+                child: Icon(Icons.error),
+              ),
+            )
+          : Image.file(
+              File(imagePath),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const Center(
+                child: Icon(Icons.error),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildActionBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          LikeButton(
+            likes: post.likes,
+            onTap: () {
+              // Handle like action
+            },
           ),
+          const Spacer(),
         ],
       ),
     );
   }
 
-  Widget _buildImage(String imagePath) {
-    if (imagePath.startsWith('http')) {
-      return CachedNetworkImage(
-        imageUrl: imagePath,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => const Center(
-          child: CircularProgressIndicator(),
+  PopupMenuButton<String> _buildOptionsMenu(BuildContext context) {
+    return PopupMenuButton<String>(
+      onSelected: (value) {
+        if (value == 'edit') {
+          _showEditDialog(context);
+        }
+      },
+      itemBuilder: (BuildContext context) => [
+        const PopupMenuItem(
+          value: 'edit',
+          child: Text('Edit'),
         ),
-        errorWidget: (context, url, error) => const Center(
-          child: Icon(Icons.error),
-        ),
-      );
-    } else {
-      return Image.file(
-        File(imagePath),
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => const Center(
-          child: Icon(Icons.error),
-        ),
-      );
-    }
+      ],
+    );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    final TextEditingController editController =
+        TextEditingController(text: post.body);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Post'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: editController,
+                decoration: const InputDecoration(
+                  labelText: 'Post Content',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 5,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Content is required' : null,
+              ),
+              if (post.imagePath != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: _buildImageWidget(post.imagePath!),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => context.pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (editController.text.isNotEmpty) {
+                  context.read<PostBloc>().add(
+                        UpdatePost(
+                          Post(
+                            id: post.id,
+                            body: editController.text,
+                            imagePath: post.imagePath,
+                            likes: post.likes,
+                            authorUsername: post.authorUsername,
+                            createdAt: post.createdAt,
+                          ),
+                        ),
+                      );
+                  context.pop();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   String _getTimeAgo(DateTime timestamp) {
