@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:social_feed_app/bloc/auth/signup/signup_events.dart';
-import 'package:social_feed_app/bloc/auth/signup/signup_state.dart';
+import 'package:social_feed_app/bloc/signup/signup_events.dart';
+import 'package:social_feed_app/bloc/signup/signup_state.dart';
 import 'package:social_feed_app/data/database/database_singleton.dart';
 import 'package:social_feed_app/data/entity/user_entity.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';

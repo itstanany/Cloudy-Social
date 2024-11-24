@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path/path.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
-import 'package:social_feed_app/bloc/auth/signup/signup_bloc.dart';
+import 'package:social_feed_app/bloc/signup/signup_bloc.dart';
 import 'package:social_feed_app/bloc/post/post_bloc.dart';
 import 'package:social_feed_app/bloc/profile/profile_bloc.dart';
 import 'package:social_feed_app/config/router.dart';
