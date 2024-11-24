@@ -8,6 +8,8 @@ import 'package:social_feed_app/data/database/database_singleton.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
 import 'dart:developer' as developer;
 
+import 'package:social_feed_app/services/password_hasher_service.dart';
+
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthStorageService _authStorage = AuthStorageService();
 
@@ -43,17 +45,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final _db = await DatabaseSingleton().database;
-      final isValid = await _db.userDao.validateCredentials(
-        event.username,
-        event.password,
-      );
+      final user = await _db.userDao.findUserByUsername(event.username);
 
-      if (isValid ?? false) {
-        await _authStorage.saveAuthState(event.username);
-        emit(AuthAuthenticated());
-      } else {
+      if (user == null) {
         emit(AuthError('Invalid credentials'));
+        return;
       }
+
+      // Verify password against stored hash
+      if (!PasswordHasherService.verifyPassword(
+          event.password, user.passwordHash)) {
+        emit(AuthError('Invalid credentials'));
+        return;
+      }
+
+      await _authStorage.saveAuthState(event.username);
+      emit(AuthAuthenticated());
     } catch (error) {
       emit(AuthError(error.toString()));
     }

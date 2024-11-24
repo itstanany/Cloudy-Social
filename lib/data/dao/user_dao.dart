@@ -16,8 +16,8 @@ abstract class UserDao {
   Future<bool?> checkUsernameExists(String username);
 
   @Query(
-      'SELECT EXISTS(SELECT 1 FROM User WHERE username = :username AND password = :password)')
-  Future<bool?> validateCredentials(String username, String password);
+      'SELECT EXISTS(SELECT 1 FROM User WHERE username = :username AND password_hash = :passwordHash)')
+  Future<bool?> validateCredentials(String username, String passwordHash);
 
   @update
   Future<void> updateUser(User user);

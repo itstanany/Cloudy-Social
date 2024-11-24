@@ -8,8 +8,8 @@ class User {
   @ColumnInfo(name: 'username')
   final String username;
 
-  @ColumnInfo(name: 'password')
-  final String password;
+  @ColumnInfo(name: 'password_hash')
+  final String passwordHash;
 
   @ColumnInfo(name: 'first_name')
   final String firstName;
@@ -28,7 +28,7 @@ class User {
   User({
     this.id,
     required this.username,
-    required this.password,
+    required this.passwordHash,
     required this.firstName,
     required this.lastName,
     required this.dateOfBirth,

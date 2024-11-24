@@ -6,6 +6,7 @@ import 'package:social_feed_app/bloc/auth/signup/signup_state.dart';
 import 'package:social_feed_app/data/database/database_singleton.dart';
 import 'package:social_feed_app/data/entity/user_entity.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
+import 'package:social_feed_app/services/password_hasher_service.dart';
 
 // lib/bloc/auth/signup/signup_bloc.dart
 class SignupBloc extends Bloc<SignupEvent, SignupState> {
@@ -24,10 +25,12 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
           emit(SignupFailure('Username already exists'));
           return;
         }
+        final hashedPassword =
+            PasswordHasherService.hashPassword(event.password);
 
         final user = User(
           username: event.username,
-          password: event.password,
+          passwordHash: hashedPassword,
           firstName: event.firstName,
           lastName: event.lastName,
           dateOfBirth: event.dateOfBirth.toIso8601String(),
@@ -40,6 +43,6 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
       } catch (error) {
         emit(SignupFailure(error.toString()));
       }
-    });   
+    });
   }
 }

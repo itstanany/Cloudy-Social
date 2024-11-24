@@ -208,7 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 User(
                   id: state.user.id,
                   username: state.user.username,
-                  password: state.user.password,
+                  passwordHash: state.user.passwordHash,
                   firstName: _firstNameController.text,
                   lastName: _lastNameController.text,
                   dateOfBirth: _dateOfBirthController.text,
@@ -230,7 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 User(
                   id: state.user.id,
                   username: state.user.username,
-                  password: state.user.password,
+                  passwordHash: state.user.passwordHash,
                   firstName: _firstNameController.text,
                   lastName: _lastNameController.text,
                   dateOfBirth: _dateOfBirthController.text,

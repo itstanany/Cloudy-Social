@@ -98,7 +98,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `User` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `first_name` TEXT NOT NULL, `last_name` TEXT NOT NULL, `date_of_birth` TEXT NOT NULL, `posts` TEXT NOT NULL, `profile_picture_path` TEXT)');
+            'CREATE TABLE IF NOT EXISTS `User` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL, `password_hash` TEXT NOT NULL, `first_name` TEXT NOT NULL, `last_name` TEXT NOT NULL, `date_of_birth` TEXT NOT NULL, `posts` TEXT NOT NULL, `profile_picture_path` TEXT)');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Post` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `body` TEXT NOT NULL, `likes` INTEGER NOT NULL, `imagePath` TEXT, `authorUsername` TEXT NOT NULL, `createdAt` TEXT NOT NULL)');
 
@@ -130,7 +130,7 @@ class _$UserDao extends UserDao {
             (User item) => <String, Object?>{
                   'id': item.id,
                   'username': item.username,
-                  'password': item.password,
+                  'password_hash': item.passwordHash,
                   'first_name': item.firstName,
                   'last_name': item.lastName,
                   'date_of_birth': item.dateOfBirth,
@@ -144,7 +144,7 @@ class _$UserDao extends UserDao {
             (User item) => <String, Object?>{
                   'id': item.id,
                   'username': item.username,
-                  'password': item.password,
+                  'password_hash': item.passwordHash,
                   'first_name': item.firstName,
                   'last_name': item.lastName,
                   'date_of_birth': item.dateOfBirth,
@@ -168,7 +168,7 @@ class _$UserDao extends UserDao {
         mapper: (Map<String, Object?> row) => User(
             id: row['id'] as int?,
             username: row['username'] as String,
-            password: row['password'] as String,
+            passwordHash: row['password_hash'] as String,
             firstName: row['first_name'] as String,
             lastName: row['last_name'] as String,
             dateOfBirth: row['date_of_birth'] as String,
@@ -183,7 +183,7 @@ class _$UserDao extends UserDao {
         mapper: (Map<String, Object?> row) => User(
             id: row['id'] as int?,
             username: row['username'] as String,
-            password: row['password'] as String,
+            passwordHash: row['password_hash'] as String,
             firstName: row['first_name'] as String,
             lastName: row['last_name'] as String,
             dateOfBirth: row['date_of_birth'] as String,
@@ -202,12 +202,12 @@ class _$UserDao extends UserDao {
   @override
   Future<bool?> validateCredentials(
     String username,
-    String password,
+    String passwordHash,
   ) async {
     return _queryAdapter.query(
-        'SELECT EXISTS(SELECT 1 FROM User WHERE username = ?1 AND password = ?2)',
+        'SELECT EXISTS(SELECT 1 FROM User WHERE username = ?1 AND password_hash = ?2)',
         mapper: (Map<String, Object?> row) => (row.values.first as int) != 0,
-        arguments: [username, password]);
+        arguments: [username, passwordHash]);
   }
 
   @override
@@ -226,7 +226,7 @@ class _$UserDao extends UserDao {
   Future<User?> getUserProfile(String username) async {
     return _queryAdapter.query(
         'SELECT first_name, last_name, date_of_birth FROM User WHERE username = ?1',
-        mapper: (Map<String, Object?> row) => User(id: row['id'] as int?, username: row['username'] as String, password: row['password'] as String, firstName: row['first_name'] as String, lastName: row['last_name'] as String, dateOfBirth: row['date_of_birth'] as String, posts: row['posts'] as String, profilePicturePath: row['profile_picture_path'] as String?),
+        mapper: (Map<String, Object?> row) => User(id: row['id'] as int?, username: row['username'] as String, passwordHash: row['password_hash'] as String, firstName: row['first_name'] as String, lastName: row['last_name'] as String, dateOfBirth: row['date_of_birth'] as String, posts: row['posts'] as String, profilePicturePath: row['profile_picture_path'] as String?),
         arguments: [username]);
   }
 
