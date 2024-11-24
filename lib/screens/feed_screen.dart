@@ -10,6 +10,7 @@ import 'package:social_feed_app/bloc/post/post_state.dart';
 import 'package:social_feed_app/config/RouteNames.dart';
 import 'package:social_feed_app/data/entity/post_entity.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
+import 'package:social_feed_app/services/post_sort_service.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({Key? key}) : super(key: key);
@@ -20,6 +21,7 @@ class FeedScreen extends StatefulWidget {
 
 class _FeedScreenState extends State<FeedScreen> {
   late String currentUsername;
+  SortType _currentSortType = SortType.recent;
 
   @override
   void initState() {
@@ -31,7 +33,30 @@ class _FeedScreenState extends State<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Posts')),
+      appBar: AppBar(
+        title: const Text('Feed'),
+        actions: [
+          PopupMenuButton<SortType>(
+            onSelected: (SortType type) {
+              setState(() => _currentSortType = type);
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem(
+                value: SortType.recent,
+                child: Text('Most Recent'),
+              ),
+              const PopupMenuItem(
+                value: SortType.popular,
+                child: Text('Most Popular'),
+              ),
+              const PopupMenuItem(
+                value: SortType.trending,
+                child: Text('Trending'),
+              ),
+            ],
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(RouteNames.addPost),
         child: Icon(Icons.add),
@@ -42,17 +67,19 @@ class _FeedScreenState extends State<FeedScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is PostsLoaded) {
+            final sortedPosts = PostSortService.sortPosts(
+              state.posts,
+              _currentSortType,
+            );
             return ListView.builder(
-              itemCount: state.posts.length,
-              itemBuilder: (context, index) {
-                final post = state.posts[index];
-                return PostCard(
-                  post: post,
-                  currentUserUsername: currentUsername,
-                );
-              },
+              itemCount: sortedPosts.length,
+              itemBuilder: (context, index) => PostCard(
+                post: sortedPosts[index],
+                currentUserUsername: currentUsername,
+              ),
             );
           }
+
           if (state is PostError) {
             return Center(child: Text(state.message));
           }
