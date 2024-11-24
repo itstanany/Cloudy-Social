@@ -100,7 +100,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `User` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `first_name` TEXT NOT NULL, `last_name` TEXT NOT NULL, `date_of_birth` TEXT NOT NULL, `posts` TEXT NOT NULL)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Post` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `body` TEXT NOT NULL, `likes` INTEGER NOT NULL, `imageUrl` TEXT, `authorUsername` TEXT NOT NULL, `createdAt` TEXT NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `Post` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `body` TEXT NOT NULL, `likes` INTEGER NOT NULL, `imagePath` TEXT, `authorUsername` TEXT NOT NULL, `createdAt` TEXT NOT NULL)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -135,6 +135,19 @@ class _$UserDao extends UserDao {
                   'last_name': item.lastName,
                   'date_of_birth': item.dateOfBirth,
                   'posts': item.posts
+                }),
+        _userUpdateAdapter = UpdateAdapter(
+            database,
+            'User',
+            ['id'],
+            (User item) => <String, Object?>{
+                  'id': item.id,
+                  'username': item.username,
+                  'password': item.password,
+                  'first_name': item.firstName,
+                  'last_name': item.lastName,
+                  'date_of_birth': item.dateOfBirth,
+                  'posts': item.posts
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -144,6 +157,8 @@ class _$UserDao extends UserDao {
   final QueryAdapter _queryAdapter;
 
   final InsertionAdapter<User> _userInsertionAdapter;
+
+  final UpdateAdapter<User> _userUpdateAdapter;
 
   @override
   Future<User?> findUserByUsername(String username) async {
@@ -192,8 +207,33 @@ class _$UserDao extends UserDao {
   }
 
   @override
+  Future<void> updateUserProfile(
+    String username,
+    String firstName,
+    String lastName,
+    String dateOfBirth,
+  ) async {
+    await _queryAdapter.queryNoReturn(
+        'UPDATE User SET first_name = ?2, last_name = ?3, date_of_birth = ?4 WHERE username = ?1',
+        arguments: [username, firstName, lastName, dateOfBirth]);
+  }
+
+  @override
+  Future<User?> getUserProfile(String username) async {
+    return _queryAdapter.query(
+        'SELECT first_name, last_name, date_of_birth FROM User WHERE username = ?1',
+        mapper: (Map<String, Object?> row) => User(id: row['id'] as int?, username: row['username'] as String, password: row['password'] as String, firstName: row['first_name'] as String, lastName: row['last_name'] as String, dateOfBirth: row['date_of_birth'] as String, posts: row['posts'] as String),
+        arguments: [username]);
+  }
+
+  @override
   Future<void> insertUser(User user) async {
     await _userInsertionAdapter.insert(user, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> updateUser(User user) async {
+    await _userUpdateAdapter.update(user, OnConflictStrategy.abort);
   }
 }
 
@@ -209,7 +249,7 @@ class _$PostDao extends PostDao {
                   'id': item.id,
                   'body': item.body,
                   'likes': item.likes,
-                  'imageUrl': item.imagePath,
+                  'imagePath': item.imagePath,
                   'authorUsername': item.authorUsername,
                   'createdAt': item.createdAt
                 }),
@@ -221,7 +261,7 @@ class _$PostDao extends PostDao {
                   'id': item.id,
                   'body': item.body,
                   'likes': item.likes,
-                  'imageUrl': item.imagePath,
+                  'imagePath': item.imagePath,
                   'authorUsername': item.authorUsername,
                   'createdAt': item.createdAt
                 }),
@@ -233,7 +273,7 @@ class _$PostDao extends PostDao {
                   'id': item.id,
                   'body': item.body,
                   'likes': item.likes,
-                  'imageUrl': item.imagePath,
+                  'imagePath': item.imagePath,
                   'authorUsername': item.authorUsername,
                   'createdAt': item.createdAt
                 });
@@ -257,7 +297,7 @@ class _$PostDao extends PostDao {
             id: row['id'] as int?,
             body: row['body'] as String,
             likes: row['likes'] as int,
-            imagePath: row['imageUrl'] as String?,
+            imagePath: row['imagePath'] as String?,
             authorUsername: row['authorUsername'] as String,
             createdAt: row['createdAt'] as String?));
   }
@@ -269,7 +309,7 @@ class _$PostDao extends PostDao {
             id: row['id'] as int?,
             body: row['body'] as String,
             likes: row['likes'] as int,
-            imagePath: row['imageUrl'] as String?,
+            imagePath: row['imagePath'] as String?,
             authorUsername: row['authorUsername'] as String,
             createdAt: row['createdAt'] as String?),
         arguments: [userId]);
@@ -282,7 +322,7 @@ class _$PostDao extends PostDao {
             id: row['id'] as int?,
             body: row['body'] as String,
             likes: row['likes'] as int,
-            imagePath: row['imageUrl'] as String?,
+            imagePath: row['imagePath'] as String?,
             authorUsername: row['authorUsername'] as String,
             createdAt: row['createdAt'] as String?),
         arguments: [postId]);

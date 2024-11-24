@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path/path.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/auth/signup/signup_bloc.dart';
 import 'package:social_feed_app/bloc/post/post_bloc.dart';
+import 'package:social_feed_app/bloc/profile/profile_bloc.dart';
 import 'package:social_feed_app/config/router.dart';
 import 'package:social_feed_app/data/database/database_singleton.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
@@ -20,6 +22,7 @@ void main() async {
   final authBloc = AuthBloc();
   final signupBlock = SignupBloc();
   final postBloc = PostBloc(db.postDao);
+  final profileBloc = ProfileBloc(db.userDao);
 
   runApp(
     MultiBlocProvider(
@@ -30,7 +33,12 @@ void main() async {
         BlocProvider<SignupBloc>(
           create: (context) => signupBlock,
         ),
-        BlocProvider<PostBloc>(create: (context) => postBloc)
+        BlocProvider<PostBloc>(
+          create: (context) => postBloc,
+        ),
+        BlocProvider(
+          create: (context) => profileBloc,
+        ),
       ],
       child: MyApp(),
     ),

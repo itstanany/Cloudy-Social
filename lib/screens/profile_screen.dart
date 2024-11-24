@@ -2,9 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
+import 'package:social_feed_app/bloc/profile/profile_bloc.dart';
+import 'package:social_feed_app/bloc/profile/profile_events.dart';
+import 'package:social_feed_app/bloc/profile/profile_state.dart';
+import 'package:social_feed_app/data/entity/user_entity.dart';
+import 'package:social_feed_app/services/auth_storage_service.dart';
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
+  late TextEditingController _dateOfBirthController;
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _dateOfBirthController = TextEditingController();
+
+    final username = AuthStorageService().getAuthenticatedUsername();
+    if (username != null) {
+      context.read<ProfileBloc>().add(LoadProfile(username));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,68 +41,159 @@ class ProfileScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              // Add logout logic here
-              context.read<AuthBloc>().add(
-                    SignOutRequested(),
-                  );
-            },
+            onPressed: () => _showSignOutDialog(context),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 50,
-              backgroundImage: NetworkImage(
-                'https://picsum.photos/200',
+      body: BlocConsumer<ProfileBloc, ProfileState>(
+        listener: (context, state) {
+          if (state is ProfileError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is ProfileLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is ProfileLoaded) {
+            _updateControllers(state.user);
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '@${state.user.username}',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      controller: _firstNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'First Name',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _lastNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Last Name',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _dateOfBirthController,
+                      decoration: const InputDecoration(
+                        labelText: 'Date of Birth',
+                        border: OutlineInputBorder(),
+                      ),
+                      readOnly: true,
+                      onTap: () => _selectDate(context),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _handleSubmit,
+                      child: const Text('Save Changes'),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'John Doe',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 24),
-            _buildProfileItem(
-              icon: Icons.email,
-              title: 'Email',
-              subtitle: 'john.doe@example.com',
-            ),
-            _buildProfileItem(
-              icon: Icons.location_on,
-              title: 'Location',
-              subtitle: 'New York, USA',
-            ),
-            _buildProfileItem(
-              icon: Icons.calendar_today,
-              title: 'Joined',
-              subtitle: 'January 2024',
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                // Add edit profile logic
-              },
-              child: const Text('Edit Profile'),
-            ),
-          ],
-        ),
+            );
+          }
+
+          return const Center(child: Text('Failed to load profile'));
+        },
       ),
     );
   }
 
-  Widget _buildProfileItem({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: Text(subtitle),
-    );
+  void _updateControllers(User user) {
+    _firstNameController.text = user.firstName;
+    _lastNameController.text = user.lastName;
+    _dateOfBirthController.text = user.dateOfBirth;
+    _selectedDate = DateTime.parse(user.dateOfBirth);
   }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _dateOfBirthController.text = picked.toIso8601String().split('T')[0];
+      });
+    }
+  }
+
+  void _handleSubmit() {
+    if (_formKey.currentState?.validate() ?? false) {
+      final state = context.read<ProfileBloc>().state;
+      if (state is ProfileLoaded) {
+        context.read<ProfileBloc>().add(
+              UpdateProfile(
+                User(
+                  id: state.user.id,
+                  username: state.user.username,
+                  password: state.user.password,
+                  firstName: _firstNameController.text,
+                  lastName: _lastNameController.text,
+                  dateOfBirth: _dateOfBirthController.text,
+                  posts: state.user.posts,
+                ),
+              ),
+            );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _dateOfBirthController.dispose();
+    super.dispose();
+  }
+}
+
+void _showSignOutDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<AuthBloc>().add(SignOutRequested());
+              Navigator.of(context).pop();
+            },
+            child: const Text('Sign Out'),
+          ),
+        ],
+      );
+    },
+  );
 }
