@@ -1,51 +1,55 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:social_feed_app/bloc/post/post_bloc.dart';
+import 'package:social_feed_app/bloc/post/post_event.dart';
+import 'package:social_feed_app/bloc/post/post_state.dart';
+import 'package:social_feed_app/config/RouteNames.dart';
+import 'package:social_feed_app/data/entity/post_entity.dart';
 
-class FeedScreen extends StatelessWidget {
+class FeedScreen extends StatefulWidget {
   const FeedScreen({Key? key}) : super(key: key);
+
+  @override
+  State<FeedScreen> createState() => _FeedScreenState();
+}
+
+class _FeedScreenState extends State<FeedScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<PostBloc>().add(LoadPosts());
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            title: const Text('Feed'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () {
-                  // Add new post logic
-                },
-              ),
-            ],
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(8.0),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => PostCard(
-                  post: _getDummyPost(),
-                ),
-                childCount: 10,
-              ),
-            ),
-          ),
-        ],
+      appBar: AppBar(title: Text('Posts')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push(RouteNames.addPost),
+        child: Icon(Icons.add),
       ),
-    );
-  }
-
-  Post _getDummyPost() {
-    return Post(
-      id: '1',
-      username: 'John Doe',
-      userAvatar: 'https://picsum.photos/50',
-      content: 'This is a sample post content',
-      imageUrl: 'https://picsum.photos/400/300',
-      likes: 42,
-      timestamp: DateTime.now(),
+      body: BlocBuilder<PostBloc, PostState>(
+        builder: (context, state) {
+          if (state is PostLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is PostsLoaded) {
+            return ListView.builder(
+              itemCount: state.posts.length,
+              itemBuilder: (context, index) {
+                final post = state.posts[index];
+                return PostCard(post: post);
+              },
+            );
+          }
+          if (state is PostError) {
+            return Center(child: Text(state.message));
+          }
+          return const Center(child: Text('No posts yet'));
+        },
+      ),
     );
   }
 }
@@ -63,12 +67,12 @@ class PostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            leading: CircleAvatar(
-              backgroundImage: CachedNetworkImageProvider(post.userAvatar),
-            ),
-            title: Text(post.username),
+            // leading: CircleAvatar(
+            //   backgroundImage: CachedNetworkImageProvider(post.userAvatar),
+            // ),
+            title: Text(post.authorUsername),
             subtitle: Text(
-              _getTimeAgo(post.timestamp),
+              _getTimeAgo(DateTime.parse(post.createdAt)),
             ),
           ),
           if (post.imageUrl != null)
@@ -81,7 +85,7 @@ class PostCard extends StatelessWidget {
             ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text(post.content),
+            child: Text(post.body),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -148,24 +152,4 @@ class LikeButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class Post {
-  final String id;
-  final String username;
-  final String userAvatar;
-  final String content;
-  final String? imageUrl;
-  final int likes;
-  final DateTime timestamp;
-
-  Post({
-    required this.id,
-    required this.username,
-    required this.userAvatar,
-    required this.content,
-    this.imageUrl,
-    required this.likes,
-    required this.timestamp,
-  });
 }

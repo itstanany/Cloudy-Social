@@ -74,6 +74,8 @@ class _$AppDatabase extends AppDatabase {
 
   UserDao? _userDaoInstance;
 
+  PostDao? _postDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -97,6 +99,8 @@ class _$AppDatabase extends AppDatabase {
       onCreate: (database, version) async {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `User` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `first_name` TEXT NOT NULL, `last_name` TEXT NOT NULL, `date_of_birth` TEXT NOT NULL, `posts` TEXT NOT NULL)');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `Post` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `body` TEXT NOT NULL, `likes` INTEGER NOT NULL, `imageUrl` TEXT, `authorUsername` TEXT NOT NULL, `createdAt` TEXT NOT NULL)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -107,6 +111,11 @@ class _$AppDatabase extends AppDatabase {
   @override
   UserDao get userDao {
     return _userDaoInstance ??= _$UserDao(database, changeListener);
+  }
+
+  @override
+  PostDao get postDao {
+    return _postDaoInstance ??= _$PostDao(database, changeListener);
   }
 }
 
@@ -185,5 +194,112 @@ class _$UserDao extends UserDao {
   @override
   Future<void> insertUser(User user) async {
     await _userInsertionAdapter.insert(user, OnConflictStrategy.abort);
+  }
+}
+
+class _$PostDao extends PostDao {
+  _$PostDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _postInsertionAdapter = InsertionAdapter(
+            database,
+            'Post',
+            (Post item) => <String, Object?>{
+                  'id': item.id,
+                  'body': item.body,
+                  'likes': item.likes,
+                  'imageUrl': item.imageUrl,
+                  'authorUsername': item.authorUsername,
+                  'createdAt': item.createdAt
+                }),
+        _postUpdateAdapter = UpdateAdapter(
+            database,
+            'Post',
+            ['id'],
+            (Post item) => <String, Object?>{
+                  'id': item.id,
+                  'body': item.body,
+                  'likes': item.likes,
+                  'imageUrl': item.imageUrl,
+                  'authorUsername': item.authorUsername,
+                  'createdAt': item.createdAt
+                }),
+        _postDeletionAdapter = DeletionAdapter(
+            database,
+            'Post',
+            ['id'],
+            (Post item) => <String, Object?>{
+                  'id': item.id,
+                  'body': item.body,
+                  'likes': item.likes,
+                  'imageUrl': item.imageUrl,
+                  'authorUsername': item.authorUsername,
+                  'createdAt': item.createdAt
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<Post> _postInsertionAdapter;
+
+  final UpdateAdapter<Post> _postUpdateAdapter;
+
+  final DeletionAdapter<Post> _postDeletionAdapter;
+
+  @override
+  Future<List<Post>> getAllPosts() async {
+    return _queryAdapter.queryList('SELECT * FROM Post ORDER BY createdAt DESC',
+        mapper: (Map<String, Object?> row) => Post(
+            id: row['id'] as int?,
+            body: row['body'] as String,
+            likes: row['likes'] as int,
+            imageUrl: row['imageUrl'] as String?,
+            authorUsername: row['authorUsername'] as String,
+            createdAt: row['createdAt'] as String?));
+  }
+
+  @override
+  Future<List<Post>> getPostsByUser(int userId) async {
+    return _queryAdapter.queryList('SELECT * FROM Post WHERE authorId = ?1',
+        mapper: (Map<String, Object?> row) => Post(
+            id: row['id'] as int?,
+            body: row['body'] as String,
+            likes: row['likes'] as int,
+            imageUrl: row['imageUrl'] as String?,
+            authorUsername: row['authorUsername'] as String,
+            createdAt: row['createdAt'] as String?),
+        arguments: [userId]);
+  }
+
+  @override
+  Future<Post?> getPostById(int postId) async {
+    return _queryAdapter.query('SELECT * FROM Post WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => Post(
+            id: row['id'] as int?,
+            body: row['body'] as String,
+            likes: row['likes'] as int,
+            imageUrl: row['imageUrl'] as String?,
+            authorUsername: row['authorUsername'] as String,
+            createdAt: row['createdAt'] as String?),
+        arguments: [postId]);
+  }
+
+  @override
+  Future<void> insertPost(Post post) async {
+    await _postInsertionAdapter.insert(post, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> updatePost(Post post) async {
+    await _postUpdateAdapter.update(post, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> deletePost(Post post) async {
+    await _postDeletionAdapter.delete(post);
   }
 }

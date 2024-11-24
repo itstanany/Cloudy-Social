@@ -10,6 +10,7 @@ import 'package:social_feed_app/config/router_refresh_stream.dart';
 import 'package:social_feed_app/screens/auth/signup_screen.dart';
 import 'package:social_feed_app/screens/feed_screen.dart';
 import 'package:social_feed_app/screens/login_screen.dart';
+import 'package:social_feed_app/screens/post/add_post_screen.dart';
 import 'package:social_feed_app/screens/profile_screen.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
 
@@ -44,6 +45,10 @@ class AppRouter {
         GoRoute(
           path: RouteNames.signup,
           builder: (context, state) => SignupScreen(),
+        ),
+        GoRoute(
+          path: RouteNames.addPost,
+          builder: (context, state) => AddPostScreen(),
         ),
         ShellRoute(
           builder: (context, state, child) {

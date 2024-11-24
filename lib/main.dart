@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/auth/signup/signup_bloc.dart';
+import 'package:social_feed_app/bloc/post/post_bloc.dart';
 import 'package:social_feed_app/config/router.dart';
 import 'package:social_feed_app/data/database/database_singleton.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
@@ -14,8 +15,11 @@ void main() async {
   // Initialize Hive
   await AuthStorageService().initialize();
 
+  final db = await DatabaseSingleton().database;
+
   final authBloc = AuthBloc();
   final signupBlock = SignupBloc();
+  final postBloc = PostBloc(db.postDao);
 
   runApp(
     MultiBlocProvider(
@@ -25,7 +29,8 @@ void main() async {
         ),
         BlocProvider<SignupBloc>(
           create: (context) => signupBlock,
-        )
+        ),
+        BlocProvider<PostBloc>(create: (context) => postBloc)
       ],
       child: MyApp(),
     ),
