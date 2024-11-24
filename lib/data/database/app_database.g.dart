@@ -209,7 +209,7 @@ class _$PostDao extends PostDao {
                   'id': item.id,
                   'body': item.body,
                   'likes': item.likes,
-                  'imageUrl': item.imageUrl,
+                  'imageUrl': item.imagePath,
                   'authorUsername': item.authorUsername,
                   'createdAt': item.createdAt
                 }),
@@ -221,7 +221,7 @@ class _$PostDao extends PostDao {
                   'id': item.id,
                   'body': item.body,
                   'likes': item.likes,
-                  'imageUrl': item.imageUrl,
+                  'imageUrl': item.imagePath,
                   'authorUsername': item.authorUsername,
                   'createdAt': item.createdAt
                 }),
@@ -233,7 +233,7 @@ class _$PostDao extends PostDao {
                   'id': item.id,
                   'body': item.body,
                   'likes': item.likes,
-                  'imageUrl': item.imageUrl,
+                  'imageUrl': item.imagePath,
                   'authorUsername': item.authorUsername,
                   'createdAt': item.createdAt
                 });
@@ -257,7 +257,7 @@ class _$PostDao extends PostDao {
             id: row['id'] as int?,
             body: row['body'] as String,
             likes: row['likes'] as int,
-            imageUrl: row['imageUrl'] as String?,
+            imagePath: row['imageUrl'] as String?,
             authorUsername: row['authorUsername'] as String,
             createdAt: row['createdAt'] as String?));
   }
@@ -269,7 +269,7 @@ class _$PostDao extends PostDao {
             id: row['id'] as int?,
             body: row['body'] as String,
             likes: row['likes'] as int,
-            imageUrl: row['imageUrl'] as String?,
+            imagePath: row['imageUrl'] as String?,
             authorUsername: row['authorUsername'] as String,
             createdAt: row['createdAt'] as String?),
         arguments: [userId]);
@@ -282,7 +282,7 @@ class _$PostDao extends PostDao {
             id: row['id'] as int?,
             body: row['body'] as String,
             likes: row['likes'] as int,
-            imageUrl: row['imageUrl'] as String?,
+            imagePath: row['imageUrl'] as String?,
             authorUsername: row['authorUsername'] as String,
             createdAt: row['createdAt'] as String?),
         arguments: [postId]);

@@ -39,7 +39,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
       final post = Post(
         body: event.body,
-        imageUrl: event.imageUrl,
+        imagePath: event.imagePath,
         authorUsername: username,
       );
 

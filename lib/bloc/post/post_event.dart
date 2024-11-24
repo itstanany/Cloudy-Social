@@ -7,12 +7,12 @@ class LoadPosts extends PostEvent {}
 
 class AddPost extends PostEvent {
   final String body;
-  final String? imageUrl;
+  final String? imagePath;
   final int? authorId;
 
   AddPost({
     required this.body,
-    this.imageUrl,
+    this.imagePath,
     this.authorId,
   });
 }

@@ -7,7 +7,7 @@ class Post {
 
   final String body;
   final int likes;
-  final String? imageUrl;
+  final String? imagePath;
   final String authorUsername;
   final String createdAt;
 
@@ -15,7 +15,7 @@ class Post {
     this.id,
     required this.body,
     this.likes = 0,
-    this.imageUrl,
+    this.imagePath,
     required this.authorUsername,
     String? createdAt,
   }) : this.createdAt = createdAt ?? DateTime.now().toIso8601String();

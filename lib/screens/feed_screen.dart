@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,14 +77,7 @@ class PostCard extends StatelessWidget {
               _getTimeAgo(DateTime.parse(post.createdAt)),
             ),
           ),
-          if (post.imageUrl != null)
-            CachedNetworkImage(
-              imageUrl: post.imageUrl!,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
+          if (post.imagePath != null) _buildImage(post.imagePath!),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(post.body),
@@ -110,6 +105,29 @@ class PostCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildImage(String imagePath) {
+    if (imagePath.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: imagePath,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        errorWidget: (context, url, error) => const Center(
+          child: Icon(Icons.error),
+        ),
+      );
+    } else {
+      return Image.file(
+        File(imagePath),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => const Center(
+          child: Icon(Icons.error),
+        ),
+      );
+    }
   }
 
   String _getTimeAgo(DateTime timestamp) {
