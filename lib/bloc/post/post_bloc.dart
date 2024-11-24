@@ -15,6 +15,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<AddPost>(_onAddPost);
     on<UpdatePost>(_onUpdatePost);
     on<DeletePost>(_onDeletePost);
+    on<LikePost>(_onLikePost);
   }
 
   Future<void> _onLoadPosts(LoadPosts event, Emitter<PostState> emit) async {
@@ -66,6 +67,25 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     emit(PostLoading());
     try {
       await _postDao.deletePost(event.post);
+      final posts = await _postDao.getAllPosts();
+      emit(PostsLoaded(posts));
+    } catch (e) {
+      emit(PostError(e.toString()));
+    }
+  }
+
+  Future<void> _onLikePost(LikePost event, Emitter<PostState> emit) async {
+    try {
+      final updatedPost = Post(
+        id: event.post.id,
+        body: event.post.body,
+        likes: event.post.likes + 1,
+        imagePath: event.post.imagePath,
+        authorUsername: event.post.authorUsername,
+        createdAt: event.post.createdAt,
+      );
+
+      await _postDao.updatePost(updatedPost);
       final posts = await _postDao.getAllPosts();
       emit(PostsLoaded(posts));
     } catch (e) {

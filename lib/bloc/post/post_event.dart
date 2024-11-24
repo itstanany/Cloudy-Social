@@ -28,3 +28,8 @@ class DeletePost extends PostEvent {
 
   DeletePost(this.post);
 }
+
+class LikePost extends PostEvent {
+  final Post post;
+  LikePost(this.post);
+}

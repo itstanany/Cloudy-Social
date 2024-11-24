@@ -127,9 +127,26 @@ class PostCard extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Text(post.body),
             ),
-            _buildActionBar(),
+            _buildActionBar(context),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionBar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          LikeButton(
+            likes: post.likes,
+            onTap: () {
+              context.read<PostBloc>().add(LikePost(post));
+            },
+          ),
+          const Spacer(),
+        ],
       ),
     );
   }
@@ -158,23 +175,6 @@ class PostCard extends StatelessWidget {
                 child: Icon(Icons.error),
               ),
             ),
-    );
-  }
-
-  Widget _buildActionBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: [
-          LikeButton(
-            likes: post.likes,
-            onTap: () {
-              // Handle like action
-            },
-          ),
-          const Spacer(),
-        ],
-      ),
     );
   }
 
@@ -268,7 +268,7 @@ class PostCard extends StatelessWidget {
   }
 }
 
-class LikeButton extends StatelessWidget {
+class LikeButton extends StatefulWidget {
   final int likes;
   final VoidCallback onTap;
 
@@ -279,16 +279,62 @@ class LikeButton extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<LikeButton> createState() => _LikeButtonState();
+}
+
+class _LikeButtonState extends State<LikeButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.2),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.2, end: 1.0),
+        weight: 50,
+      ),
+    ]).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    _controller.forward(from: 0.0);
+    widget.onTap();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
+    return GestureDetector(
+      onTap: _handleTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
           children: [
-            const Icon(Icons.favorite_border),
+            ScaleTransition(
+              scale: _scaleAnimation,
+              child: Icon(
+                Icons.favorite_border,
+                color: Colors.red,
+              ),
+            ),
             const SizedBox(width: 4),
-            Text('$likes'),
+            Text('${widget.likes}'),
           ],
         ),
       ),
