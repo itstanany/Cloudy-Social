@@ -22,7 +22,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     emit(PostLoading());
     try {
       final posts = await _postDao.getAllPosts();
-      debugPrint(posts.toString());
       emit(PostsLoaded(posts));
     } catch (e) {
       emit(PostError(e.toString()));

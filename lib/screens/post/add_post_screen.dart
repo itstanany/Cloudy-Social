@@ -36,7 +36,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Error picking image: $e');
       // Show error message to user
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to pick image')),

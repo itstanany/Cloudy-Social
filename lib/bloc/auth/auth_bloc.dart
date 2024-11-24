@@ -28,14 +28,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     developer.log("inside check auth status");
     developer.log("inside 22 check auth status");
     if (_authStorage.isUserAuthenticated()) {
-      debugPrint("inside if true");
-
       emit(AuthAuthenticated());
     } else {
       emit(AuthUnauthenticated());
-      debugPrint("inside if false");
     }
-    debugPrint("after if");
   }
 
   Future<void> _onSignInRequested(

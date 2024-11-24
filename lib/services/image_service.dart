@@ -24,7 +24,6 @@ class ImageService {
 
       return savedImage.path;
     } catch (e) {
-      debugPrint('Error saving image: $e');
       throw Exception('Failed to save image');
     }
   }
@@ -35,9 +34,7 @@ class ImageService {
       if (await file.exists()) {
         await file.delete();
       }
-    } catch (e) {
-      debugPrint('Error deleting image: $e');
-    }
+    } catch (e) {}
   }
 
   static bool isLocalImage(String imagePath) {
@@ -56,8 +53,6 @@ class ImageService {
           }
         }
       }
-    } catch (e) {
-      debugPrint('Error cleaning up images: $e');
-    }
+    } catch (e) {}
   }
 }
