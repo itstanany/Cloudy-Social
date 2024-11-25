@@ -5,6 +5,8 @@ import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/auth/auth_state.dart';
 import 'package:social_feed_app/config/route_names.dart';
+import 'package:social_feed_app/controllers/login_controller.dart';
+import 'package:social_feed_app/models/login_form_model.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -14,25 +16,23 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  late final LoginController _controller;
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    _controller = LoginController(context.read<AuthBloc>());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
+        listener: _handleAuthStateChange,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -42,63 +42,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Welcome Back',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                  ),
+                  _buildHeader(context),
                   const SizedBox(height: 32),
-                  TextFormField(
-                    controller: _usernameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Username',
-                      prefixIcon: Icon(Icons.person),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter username';
-                      }
-                      return null;
-                    },
-                  ),
+                  _buildUsernameField(),
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: Icon(Icons.lock),
-                      border: OutlineInputBorder(),
-                    ),
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter password';
-                      }
-                      return null;
-                    },
-                  ),
+                  _buildPasswordField(),
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _handleLogin,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Login'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                  ),
+                  _buildLoginButton(),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Don't have an account?"),
-                      TextButton(
-                        onPressed: () => context.go(RouteNames.signup),
-                        child: const Text('Sign Up'),
-                      ),
-                    ],
-                  ),
+                  _buildSignupRow(context),
                 ],
               ),
             ),
@@ -108,23 +60,88 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Widget _buildHeader(BuildContext context) {
+    return Text(
+      'Welcome Back',
+      style: Theme.of(context).textTheme.headlineMedium,
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildUsernameField() {
+    return TextFormField(
+      controller: _usernameController,
+      decoration: const InputDecoration(
+        labelText: 'Username',
+        prefixIcon: Icon(Icons.person),
+        border: OutlineInputBorder(),
+      ),
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter username' : null,
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return TextFormField(
+      controller: _passwordController,
+      decoration: const InputDecoration(
+        labelText: 'Password',
+        prefixIcon: Icon(Icons.lock),
+        border: OutlineInputBorder(),
+      ),
+      obscureText: true,
+      validator: (value) =>
+          value?.isEmpty ?? true ? 'Please enter password' : null,
+    );
+  }
+
+  Widget _buildLoginButton() {
+    return ElevatedButton(
+      onPressed: _isLoading ? null : _handleLogin,
+      child:
+          _isLoading ? const CircularProgressIndicator() : const Text('Login'),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+    );
+  }
+
+  Widget _buildSignupRow(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text("Don't have an account?"),
+        TextButton(
+          onPressed: () => _controller.navigateToSignup(context),
+          child: const Text('Sign Up'),
+        ),
+      ],
+    );
+  }
+
+  void _handleAuthStateChange(BuildContext context, AuthState state) {
+    if (state is AuthError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(state.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
 
       try {
-        context.read<AuthBloc>().add(
-              SignInRequested(
-                _usernameController.text,
-                _passwordController.text,
-              ),
-            );
+        final form = LoginFormModel(
+          username: _usernameController.text,
+          password: _passwordController.text,
+        );
+        _controller.login(form);
       } finally {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
