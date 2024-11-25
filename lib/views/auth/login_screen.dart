@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/auth/auth_state.dart';
+import 'package:social_feed_app/config/app_config.dart';
 import 'package:social_feed_app/config/route_names.dart';
 import 'package:social_feed_app/controllers/login_controller.dart';
 import 'package:social_feed_app/models/login_form_model.dart';
@@ -34,24 +35,29 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: _handleAuthStateChange,
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 32),
-                  _buildUsernameField(),
-                  const SizedBox(height: 16),
-                  _buildPasswordField(),
-                  const SizedBox(height: 24),
-                  _buildLoginButton(),
-                  const SizedBox(height: 16),
-                  _buildSignupRow(context),
-                ],
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 48),
+                    _buildLogo(),
+                    const SizedBox(height: 24),
+                    _buildAppName(),
+                    const SizedBox(height: 16),
+                    _buildHeader(context),
+                    const SizedBox(height: 48),
+                    _buildUsernameField(),
+                    const SizedBox(height: 16),
+                    _buildPasswordField(),
+                    const SizedBox(height: 24),
+                    _buildLoginButton(),
+                    const SizedBox(height: 16),
+                    _buildSignupRow(context),
+                  ],
+                ),
               ),
             ),
           ),
@@ -60,21 +66,58 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Widget _buildLogo() {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        shape: BoxShape.circle,
+      ),
+      child: ClipOval(
+        child: Image.asset(
+          'assets/icon/icon.png',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.people_outline,
+            size: 60,
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppName() {
+    return Text(
+      AppConfig.appName,
+      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+            color: Theme.of(context).primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
+    );
+  }
+
   Widget _buildHeader(BuildContext context) {
     return Text(
       'Welcome Back',
-      style: Theme.of(context).textTheme.headlineMedium,
-      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: Colors.grey[700],
+          ),
     );
   }
 
   Widget _buildUsernameField() {
     return TextFormField(
       controller: _usernameController,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Username',
-        prefixIcon: Icon(Icons.person),
-        border: OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.person),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: Colors.grey[100],
       ),
       validator: (value) =>
           value?.isEmpty ?? true ? 'Please enter username' : null,
@@ -84,10 +127,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildPasswordField() {
     return TextFormField(
       controller: _passwordController,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Password',
-        prefixIcon: Icon(Icons.lock),
-        border: OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.lock),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: Colors.grey[100],
       ),
       obscureText: true,
       validator: (value) =>
@@ -96,12 +143,26 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoginButton() {
-    return ElevatedButton(
-      onPressed: _isLoading ? null : _handleLogin,
-      child:
-          _isLoading ? const CircularProgressIndicator() : const Text('Login'),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+    return SizedBox(
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _handleLogin,
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            : const Text(
+                'Login',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
       ),
     );
   }
@@ -110,10 +171,16 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text("Don't have an account?"),
+        Text(
+          "Don't have an account?",
+          style: TextStyle(color: Colors.grey[600]),
+        ),
         TextButton(
           onPressed: () => _controller.navigateToSignup(context),
-          child: const Text('Sign Up'),
+          child: const Text(
+            'Sign Up',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
