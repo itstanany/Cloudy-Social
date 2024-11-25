@@ -5,7 +5,7 @@ import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_state.dart';
 import 'package:social_feed_app/bloc/signup/signup_bloc.dart';
 import 'package:social_feed_app/bloc/signup/signup_state.dart';
-import 'package:social_feed_app/config/RouteNames.dart';
+import 'package:social_feed_app/config/route_names.dart';
 import 'package:social_feed_app/config/router_refresh_stream.dart';
 import 'package:social_feed_app/screens/auth/signup_screen.dart';
 import 'package:social_feed_app/screens/feed_screen.dart';

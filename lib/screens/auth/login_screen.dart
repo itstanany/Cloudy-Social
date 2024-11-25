@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/auth/auth_state.dart';
-import 'package:social_feed_app/config/RouteNames.dart';
+import 'package:social_feed_app/config/route_names.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);

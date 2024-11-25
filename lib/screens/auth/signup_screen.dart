@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:social_feed_app/bloc/signup/signup_bloc.dart';
 import 'package:social_feed_app/bloc/signup/signup_events.dart';
 import 'package:social_feed_app/bloc/signup/signup_state.dart';
-import 'package:social_feed_app/config/RouteNames.dart';
+import 'package:social_feed_app/config/route_names.dart';
 import 'package:social_feed_app/config/router.dart';
 
 class SignupScreen extends StatefulWidget {

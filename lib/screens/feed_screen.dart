@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:social_feed_app/bloc/post/post_bloc.dart';
 import 'package:social_feed_app/bloc/post/post_event.dart';
 import 'package:social_feed_app/bloc/post/post_state.dart';
-import 'package:social_feed_app/config/RouteNames.dart';
+import 'package:social_feed_app/config/route_names.dart';
 import 'package:social_feed_app/data/entity/post_entity.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
 import 'package:social_feed_app/services/post_sort_service.dart';
