@@ -1,223 +1,137 @@
-import 'dart:io';
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:social_feed_app/bloc/auth/auth_bloc.dart';
 import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/profile/profile_bloc.dart';
 import 'package:social_feed_app/bloc/profile/profile_events.dart';
 import 'package:social_feed_app/bloc/profile/profile_state.dart';
+import 'package:social_feed_app/controllers/profile.controller.dart';
 import 'package:social_feed_app/data/entities/user.dart';
+import 'package:social_feed_app/models/profile_model.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
-import 'package:social_feed_app/services/image_service.dart';
+import 'package:social_feed_app/views/profile/widgets/profile_picture.dart';
+import 'package:social_feed_app/views/profile/widgets/profile_form.dart';
+import 'package:intl/intl.dart';
 
+// lib/views/screens/profile/profile_screen.dart
 class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  late final ProfileController _controller;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
   late TextEditingController _dateOfBirthController;
-  DateTime? _selectedDate;
-  final _picker = ImagePicker();
-  File? _profileImage;
 
   @override
   void initState() {
     super.initState();
+    _controller = ProfileController(
+      context.read<ProfileBloc>(),
+      context.read<AuthBloc>(),
+    );
+    _initializeControllers();
+    _loadProfile();
+  }
+
+  void _initializeControllers() {
     _firstNameController = TextEditingController();
     _lastNameController = TextEditingController();
     _dateOfBirthController = TextEditingController();
+  }
 
+  void _loadProfile() {
     final username = AuthStorageService().getAuthenticatedUsername();
     if (username != null) {
-      context.read<ProfileBloc>().add(LoadProfile(username));
+      _controller.loadProfile(username);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _showSignOutDialog(context),
-          ),
-        ],
-      ),
-      body: BlocConsumer<ProfileBloc, ProfileState>(
-        listener: (context, state) {
-          if (state is ProfileError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is ProfileLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      appBar: _buildAppBar(),
+      body: _buildBody(),
+    );
+  }
 
-          if (state is ProfileLoaded) {
-            _updateControllers(state.user);
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: const Text('Profile'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: () => _showSignOutDialog(context),
+        ),
+      ],
+    );
+  }
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      '@${state.user.username}',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildProfilePicture(state.user),
-                    const SizedBox(height: 24),
-                    TextFormField(
-                      controller: _firstNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'First Name',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) =>
-                          value?.isEmpty ?? true ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _lastNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Last Name',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) =>
-                          value?.isEmpty ?? true ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _dateOfBirthController,
-                      decoration: const InputDecoration(
-                        labelText: 'Date of Birth',
-                        border: OutlineInputBorder(),
-                      ),
-                      readOnly: true,
-                      onTap: () => _selectDate(context),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _handleSubmit,
-                      child: const Text('Save Changes'),
-                    ),
-                  ],
+  Widget _buildBody() {
+    return BlocConsumer<ProfileBloc, ProfileState>(
+      listener: (context, state) {
+        if (state is ProfileError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+        }
+      },
+      builder: (context, state) {
+        if (state is ProfileLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (state is ProfileLoaded) {
+          _updateControllers(state.user);
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                ProfilePicture(
+                  profile: ProfileModel(user: state.user),
+                  onPictureUpdated: (imagePath) {
+                    _controller.updateProfilePicture(state.user, imagePath);
+                  },
                 ),
-              ),
-            );
-          }
+                const SizedBox(height: 24),
+                ProfileForm(
+                  profile: ProfileModel(user: state.user),
+                  formKey: _formKey,
+                  firstNameController: _firstNameController,
+                  lastNameController: _lastNameController,
+                  dateOfBirthController: _dateOfBirthController,
+                  onSubmit: _handleSubmit,
+                  onDateSelected: (date) {
+                    setState(() {
+                      _dateOfBirthController.text =
+                          DateFormat('dd/MM/yyyy').format(date);
+                    });
+                  },
+                ),
+              ],
+            ),
+          );
+        }
 
-          return const Center(child: Text('Failed to load profile'));
-        },
-      ),
+        return const Center(child: Text('Failed to load profile'));
+      },
     );
   }
 
   void _updateControllers(User user) {
-    _firstNameController.text = user.firstName;
-    _lastNameController.text = user.lastName;
-    _dateOfBirthController.text = user.dateOfBirth;
-    _selectedDate = DateTime.parse(user.dateOfBirth);
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-        _dateOfBirthController.text = picked.toIso8601String().split('T')[0];
-      });
+    if (_firstNameController.text != user.firstName) {
+      _firstNameController.text = user.firstName;
     }
-  }
-
-  Widget _buildProfilePicture(User user) {
-    return Center(
-      child: Stack(
-        children: [
-          CircleAvatar(
-            radius: 60,
-            backgroundImage: _getProfileImage(user.profilePicturePath),
-            child: user.profilePicturePath == null
-                ? const Icon(Icons.person, size: 60)
-                : null,
-          ),
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: CircleAvatar(
-              backgroundColor: Theme.of(context).primaryColor,
-              radius: 20,
-              child: IconButton(
-                icon: const Icon(Icons.camera_alt, color: Colors.white),
-                onPressed: _updateProfilePicture,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  ImageProvider? _getProfileImage(String? imagePath) {
-    if (imagePath == null) return null;
-
-    if (ImageService.isLocalImage(imagePath)) {
-      return FileImage(File(imagePath));
+    if (_lastNameController.text != user.lastName) {
+      _lastNameController.text = user.lastName;
     }
-    return CachedNetworkImageProvider(imagePath);
-  }
-
-  Future<void> _updateProfilePicture() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 512,
-      maxHeight: 512,
-    );
-
-    if (pickedFile != null) {
-      final imagePath = await ImageService.saveLocalImage(
-        File(pickedFile.path),
-      );
-
-      final state = context.read<ProfileBloc>().state;
-      if (state is ProfileLoaded) {
-        context.read<ProfileBloc>().add(
-              UpdateProfile(
-                User(
-                  id: state.user.id,
-                  username: state.user.username,
-                  passwordHash: state.user.passwordHash,
-                  firstName: _firstNameController.text,
-                  lastName: _lastNameController.text,
-                  dateOfBirth: _dateOfBirthController.text,
-                  posts: state.user.posts,
-                  profilePicturePath: imagePath,
-                ),
-              ),
-            );
-      }
+    if (_dateOfBirthController.text.isEmpty) {
+      _dateOfBirthController.text =
+          DateFormat('dd/MM/yyyy').format(DateTime.parse(user.dateOfBirth));
     }
   }
 
@@ -225,6 +139,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       final state = context.read<ProfileBloc>().state;
       if (state is ProfileLoaded) {
+        // Parse the displayed date format back to ISO8601
+        final DateFormat displayFormat = DateFormat('dd/MM/yyyy');
+        final DateTime date = displayFormat.parse(_dateOfBirthController.text);
+
         context.read<ProfileBloc>().add(
               UpdateProfile(
                 User(
@@ -233,7 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   passwordHash: state.user.passwordHash,
                   firstName: _firstNameController.text,
                   lastName: _lastNameController.text,
-                  dateOfBirth: _dateOfBirthController.text,
+                  dateOfBirth: date.toIso8601String(),
                   posts: state.user.posts,
                   profilePicturePath: state.user.profilePicturePath,
                 ),
@@ -241,14 +159,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
       }
     }
-  }
-
-  @override
-  void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _dateOfBirthController.dispose();
-    super.dispose();
   }
 }
 
