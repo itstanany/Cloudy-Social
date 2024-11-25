@@ -128,13 +128,13 @@ class _AddPostScreenState extends State<AddPostScreen> {
     if (_imageFile != null) {
       return Image.file(
         _imageFile!,
-        fit: BoxFit.cover,
+        fit: BoxFit.contain,
         width: double.infinity,
       );
     }
     return Image.network(
       _imageUrl!,
-      fit: BoxFit.cover,
+      fit: BoxFit.contain,
       width: double.infinity,
       errorBuilder: (context, error, stackTrace) =>
           const Center(child: Text('Invalid Image URL')),

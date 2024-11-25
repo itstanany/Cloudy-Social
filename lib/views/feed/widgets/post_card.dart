@@ -93,7 +93,7 @@ class PostCardView extends StatelessWidget {
       child: imagePath.startsWith('http')
           ? CachedNetworkImage(
               imageUrl: imagePath,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               placeholder: (context, url) => const Center(
                 child: CircularProgressIndicator(),
               ),
@@ -103,7 +103,7 @@ class PostCardView extends StatelessWidget {
             )
           : Image.file(
               File(imagePath),
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => const Center(
                 child: Icon(Icons.error),
               ),
@@ -174,7 +174,7 @@ class PostCardView extends StatelessWidget {
               if (postModel.post.imagePath != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 16.0),
-                  child: _buildImageWidget(postModel.post.imagePath!),
+                  child: _buildImage(postModel.post.imagePath!),
                 ),
             ],
           ),
@@ -196,33 +196,6 @@ class PostCardView extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildImageWidget(String imagePath) {
-    return Container(
-      constraints: const BoxConstraints(
-        maxHeight: 300,
-      ),
-      width: double.infinity,
-      child: imagePath.startsWith('http')
-          ? CachedNetworkImage(
-              imageUrl: imagePath,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              errorWidget: (context, url, error) => const Center(
-                child: Icon(Icons.error),
-              ),
-            )
-          : Image.file(
-              File(imagePath),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const Center(
-                child: Icon(Icons.error),
-              ),
-            ),
     );
   }
 }
