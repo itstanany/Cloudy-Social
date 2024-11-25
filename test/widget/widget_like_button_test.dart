@@ -40,7 +40,7 @@ void main() {
       );
 
       expect(find.text('10'), findsOneWidget);
-      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      expect(find.byIcon(Icons.favorite), findsOneWidget);
     });
 
     testWidgets('triggers animation and callback when tapped', (tester) async {
@@ -59,7 +59,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byIcon(Icons.favorite_border));
+      await tester.tap(find.byIcon(Icons.favorite));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
@@ -67,21 +67,26 @@ void main() {
     });
 
     testWidgets('integrates with PostBloc correctly', (tester) async {
-      final post = PostModel(Post(
+      final mockPostBloc = MockPostBloc();
+      final post = Post(
         id: 1,
         body: 'Test post',
         likes: 10,
         authorUsername: 'testUser',
         createdAt: DateTime.now().toIso8601String(),
-      ));
+      );
+      final postModel = PostModel(post);
 
-      when(() => mockPostBloc.state).thenReturn(PostsLoaded([post.post]));
+      // Set up initial state
+      when(() => mockPostBloc.state).thenReturn(PostsLoaded([post]));
+
+      // Mock state changes for like interaction
       whenListen(
         mockPostBloc,
         Stream.fromIterable([
-          PostsLoaded([post.post]),
+          PostsLoaded([post]),
           PostLoading(),
-          PostsLoaded([post.post.copyWith(likes: post.post.likes + 1)]),
+          PostsLoaded([post.copyWith(likes: post.likes + 1)]),
         ]),
       );
 
@@ -90,11 +95,13 @@ void main() {
           home: BlocProvider<PostBloc>.value(
             value: mockPostBloc,
             child: PostCardView(
-              postModel: post,
+              postModel: postModel,
               currentUserUsername: 'testUser',
-              onDelete: () => {},
-              onLike: () => {},
-              onEdit: (String newBody) => {},
+              onLike: () => mockPostBloc.add(LikePost(post)),
+              onDelete: () => mockPostBloc.add(DeletePost(post)),
+              onEdit: (newBody) => mockPostBloc.add(
+                UpdatePost(post.copyWith(body: newBody)),
+              ),
             ),
           ),
         ),
