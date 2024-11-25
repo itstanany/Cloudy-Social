@@ -1,4 +1,4 @@
-import 'package:social_feed_app/data/entity/post_entity.dart';
+import 'package:social_feed_app/data/entities/post.dart';
 
 class PostSortService {
   static const double LIKES_WEIGHT = 1.0;

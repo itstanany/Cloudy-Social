@@ -9,7 +9,7 @@ import 'package:social_feed_app/bloc/auth/auth_events.dart';
 import 'package:social_feed_app/bloc/profile/profile_bloc.dart';
 import 'package:social_feed_app/bloc/profile/profile_events.dart';
 import 'package:social_feed_app/bloc/profile/profile_state.dart';
-import 'package:social_feed_app/data/entity/user_entity.dart';
+import 'package:social_feed_app/data/entities/user.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
 import 'package:social_feed_app/services/image_service.dart';
 

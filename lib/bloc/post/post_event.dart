@@ -1,5 +1,5 @@
 // lib/bloc/post/post_event.dart
-import '../../data/entity/post_entity.dart';
+import '../../data/entities/post.dart';
 
 abstract class PostEvent {}
 

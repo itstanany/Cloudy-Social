@@ -1,4 +1,4 @@
-import 'package:social_feed_app/data/entity/post_entity.dart';
+import 'package:social_feed_app/data/entities/post.dart';
 
 abstract class PostState {}
 

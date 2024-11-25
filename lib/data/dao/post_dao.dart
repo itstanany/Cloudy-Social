@@ -1,5 +1,5 @@
 import 'package:floor/floor.dart';
-import 'package:social_feed_app/data/entity/post_entity.dart';
+import 'package:social_feed_app/data/entities/post.dart';
 
 @dao
 abstract class PostDao {

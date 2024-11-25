@@ -1,4 +1,4 @@
-import 'package:social_feed_app/data/entity/user_entity.dart';
+import 'package:social_feed_app/data/entities/user.dart';
 
 abstract class ProfileEvent {}
 

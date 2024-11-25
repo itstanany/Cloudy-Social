@@ -4,7 +4,7 @@ import 'package:social_feed_app/bloc/post/post_event.dart';
 import 'package:social_feed_app/bloc/post/post_state.dart';
 import 'package:social_feed_app/data/dao/post_dao.dart';
 import 'package:social_feed_app/data/database/database_singleton.dart';
-import 'package:social_feed_app/data/entity/post_entity.dart';
+import 'package:social_feed_app/data/entities/post.dart';
 import 'package:social_feed_app/services/auth_storage_service.dart';
 
 class PostBloc extends Bloc<PostEvent, PostState> {
