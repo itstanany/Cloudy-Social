@@ -3,10 +3,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path/path.dart';
-import 'package:social_feed_app/data/entities/post.dart';
 import 'package:social_feed_app/models/post_model.dart';
 import 'package:social_feed_app/views/feed/widgets/like_button.dart';
 
