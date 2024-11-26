@@ -2,6 +2,8 @@
 
 A Flutter social media application implementing MVC architecture with BLoC pattern for state management.
 
+![App Demo](docs/slow.gif)
+
 ## Architecture Overview
 
 ### MVC + BLoC Pattern
